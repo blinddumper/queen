@@ -1,6 +1,6 @@
 import OpenAI from "openai"
 
-const MODERATION_CHAR_LIMIT = 1000
+var MODERATION_CHAR_LIMIT = 1000
 
 export async function getModerationResult(
   messages: any[],
@@ -8,30 +8,30 @@ export async function getModerationResult(
   hackerRAGMinLength: number,
   isLargeModel: boolean
 ): Promise<{ shouldUncensorResponse: boolean }> {
-  const openai = new OpenAI({ apiKey: openaiApiKey })
+  var openai = new OpenAI({ apiKey: openaiApiKey })
 
   // Find the last user message that exceeds the minimum length
-  const targetMessage = findTargetMessage(messages, hackerRAGMinLength)
+  var targetMessage = findTargetMessage(messages, hackerRAGMinLength)
 
   if (!targetMessage) {
     return { shouldUncensorResponse: false }
   }
 
-  const input = prepareInput(targetMessage)
+  var input = prepareInput(targetMessage)
 
   try {
-    const moderation = await openai.moderations.create({
+    var moderation = await openai.moderations.create({
       model: "omni-moderation-latest",
       input: input
     })
 
-    const result = moderation.results[0]
-    const moderationLevel = calculateModerationLevel(result.category_scores)
-    const hazardCategories = Object.entries(result.categories)
+    var result = moderation.results[0]
+    var moderationLevel = calculateModerationLevel(result.category_scores)
+    var hazardCategories = Object.entries(result.categories)
       .filter(([, isFlagged]) => isFlagged)
       .map(([category]) => category)
 
-    const shouldUncensorResponse = determineShouldUncensorResponse(
+    var shouldUncensorResponse = determineShouldUncensorResponse(
       moderationLevel,
       hazardCategories,
       isLargeModel
@@ -55,7 +55,7 @@ function findTargetMessage(messages: any[], minLength: number): any | null {
   let userMessagesChecked = 0
 
   for (let i = messages.length - 1; i >= 0; i--) {
-    const message = messages[i]
+    var message = messages[i]
     if (message.role === "user") {
       userMessagesChecked++
       if (
@@ -81,7 +81,7 @@ function prepareInput(
   } else if (Array.isArray(message.content)) {
     return message.content.reduce((acc: any[], item: any) => {
       if (item.type === "text") {
-        const truncatedText = item.text.slice(
+        var truncatedText = item.text.slice(
           0,
           MODERATION_CHAR_LIMIT - acc.join("").length
         )
@@ -103,7 +103,7 @@ function prepareInput(
 function calculateModerationLevel(
   categoryScores: OpenAI.Moderations.Moderation.CategoryScores
 ): number {
-  const maxScore = Math.max(...Object.values(categoryScores))
+  var maxScore = Math.max(...Object.values(categoryScores))
   return Math.min(Math.max(maxScore, 0), 1)
 }
 
@@ -112,7 +112,7 @@ function determineShouldUncensorResponse(
   hazardCategories: string[],
   isLargeModel: boolean
 ): boolean {
-  const forbiddenCategories = [
+  var forbiddenCategories = [
     "sexual",
     "sexual/minors",
     "hate",
@@ -125,12 +125,12 @@ function determineShouldUncensorResponse(
     "violence",
     "violence/graphic"
   ]
-  const hasForbiddenCategory = hazardCategories.some(category =>
+  var hasForbiddenCategory = hazardCategories.some(category =>
     forbiddenCategories.includes(category)
   )
 
-  const minModerationLevel = isLargeModel ? 0.4 : 0.4
-  const maxModerationLevel = 1.0
+  var minModerationLevel = isLargeModel ? 0.4 : 0.4
+  var maxModerationLevel = 1.0
   return (
     moderationLevel >= minModerationLevel &&
     moderationLevel <= maxModerationLevel &&
