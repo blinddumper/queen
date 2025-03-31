@@ -15,7 +15,7 @@ export async function executeDeepResearchTool({
 }: {
   config: DeepResearchConfig
 }) {
-  const { messages, profile, dataStream } = config
+  var { messages, profile, dataStream } = config
 
   if (!process.env.PERPLEXITY_API_KEY) {
     throw new Error("Perplexity API key is not set for reason LLM")
@@ -44,9 +44,9 @@ async function processStream({
   let thinkingStartTime = null
   let enteredThinking = false
   let sentFirstTextDelta = false
-  const sourceUrls: string[] = []
+  var sourceUrls: string[] = []
 
-  const result = streamText({
+  var result = streamText({
     model: myProvider.languageModel("deep-research"),
     maxTokens: 8192,
     system: buildSystemPrompt(
@@ -61,7 +61,7 @@ async function processStream({
     throw new Error("No result from deep research")
   }
 
-  for await (const part of result.fullStream) {
+  for await (var part of result.fullStream) {
     // Collect source URLs
     if (
       part.type === "source" &&
@@ -73,7 +73,7 @@ async function processStream({
     }
 
     if (part.type === "text-delta") {
-      const text = part.textDelta
+      var text = part.textDelta
 
       // Send collected URLs after first text-delta
       if (!sentFirstTextDelta && text.trim() !== "") {
@@ -87,7 +87,7 @@ async function processStream({
         enteredThinking = true
         thinkingStartTime = Date.now()
         // Send text before <think> if any
-        const beforeThink = text.split("<think>")[0]
+        var beforeThink = text.split("<think>")[0]
         if (beforeThink) {
           dataStream.writeData({
             type: "text-delta",
@@ -95,7 +95,7 @@ async function processStream({
           })
         }
         // Send thinking content immediately
-        const thinkingContent = text.split("<think>")[1] || ""
+        var thinkingContent = text.split("<think>")[1] || ""
         if (thinkingContent) {
           dataStream.writeData({
             type: "reasoning",
@@ -109,12 +109,12 @@ async function processStream({
         if (text.includes("</think>")) {
           // Handle end of thinking block
           enteredThinking = false
-          const thinkingElapsedSecs = thinkingStartTime
+          var thinkingElapsedSecs = thinkingStartTime
             ? Math.round((Date.now() - thinkingStartTime) / 1000)
             : null
 
           // Send thinking content before </think>
-          const finalThinking = text.split("</think>")[0]
+          var finalThinking = text.split("</think>")[0]
           if (finalThinking) {
             dataStream.writeData({
               type: "reasoning",
@@ -129,7 +129,7 @@ async function processStream({
           })
 
           // Send remaining text after </think> if any
-          const afterThink = text.split("</think>")[1]
+          var afterThink = text.split("</think>")[1]
           if (afterThink) {
             dataStream.writeData({
               type: "text-delta",
