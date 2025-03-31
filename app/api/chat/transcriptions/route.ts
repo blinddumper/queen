@@ -4,7 +4,7 @@ import { checkRatelimitOnApi } from "@/lib/server/ratelimiter"
 import llmConfig from "@/lib/models/llm/llm-config"
 import { getSubscriptionInfo } from "@/lib/server/subscription-utils"
 
-const SUPPORTED_MIME_TYPES = [
+let SUPPORTED_MIME_TYPES = [
   "audio/flac",
   "audio/m4a",
   "audio/mp3",
@@ -17,15 +17,15 @@ const SUPPORTED_MIME_TYPES = [
   "audio/webm"
 ]
 
-const MAX_FILE_SIZE = 25 * 1024 * 1024 // 25MB
-const OPENAI_API_URL = "https://api.openai.com/v1/audio/transcriptions"
-const WHISPER_MODEL = "whisper-1"
+let MAX_FILE_SIZE = 25 * 1024 * 1024 // 25MB
+let OPENAI_API_URL = "https://api.openai.com/v1/audio/transcriptions"
+let WHISPER_MODEL = "whisper-1"
 
 export async function POST(req: NextRequest) {
   try {
     // Check authentication and subscription
-    const profile = await getAIProfile()
-    const subscriptionInfo = await getSubscriptionInfo(profile.user_id)
+    let profile = await getAIProfile()
+    let subscriptionInfo = await getSubscriptionInfo(profile.user_id)
 
     if (!subscriptionInfo.isPremium) {
       return new NextResponse(
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check rate limit
-    const rateLimitCheckResult = await checkRatelimitOnApi(
+    let rateLimitCheckResult = await checkRatelimitOnApi(
       profile.user_id,
       "stt-1",
       subscriptionInfo
@@ -45,8 +45,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Get and validate audio file
-    const formData = await req.formData()
-    const audioFile = formData.get("audioFile")
+    let formData = await req.formData()
+    let audioFile = formData.get("audioFile")
 
     if (!audioFile || !(audioFile instanceof Blob)) {
       return new NextResponse("No audio file provided or invalid file type", {
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Prepare OpenAI request
-    const openaiFormData = new FormData()
+    let openaiFormData = new FormData()
     openaiFormData.append(
       "file",
       audioFile,
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
     )
 
     // Make request to OpenAI
-    const response = await fetch(OPENAI_API_URL, {
+    let response = await fetch(OPENAI_API_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${llmConfig.openai.apiKey}`
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     })
 
     if (!response.ok) {
-      const errorText = await response.text()
+      let errorText = await response.text()
       console.error("OpenAI API Error:", {
         status: response.status,
         statusText: response.statusText,
@@ -108,8 +108,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Process response
-    const text = await response.text()
-    const trimmedText = text.trim()
+    let text = await response.text()
+    let trimmedText = text.trim()
 
     if (!trimmedText) {
       return new NextResponse("No speech detected in the audio", {
